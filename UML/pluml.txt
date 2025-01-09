@@ -1,0 +1,134 @@
+@startuml
+actor Admin as A
+actor Staff as S
+
+rectangle "Manajemen Login" {
+    usecase "Sebagai Admin atau Staff, saya ingin login ke sistem agar dapat mengakses fitur sesuai peran saya." as UC1
+    usecase "Sebagai Admin atau Staff, saya ingin logout dari sistem untuk mengakhiri sesi saya." as UC2
+}
+
+rectangle "Manajemen Inventaris (CRUD)" {
+    usecase "Sebagai Admin, saya ingin menambah barang ke dalam inventaris agar stok dapat dikelola." as UC3
+    usecase "Sebagai Admin, saya ingin melihat data barang agar saya bisa memantau stok yang tersedia." as UC4
+    usecase "Sebagai Admin, saya ingin memperbarui data barang agar inventaris selalu akurat." as UC5
+    usecase "Sebagai Admin, saya ingin menghapus barang dari inventaris agar barang yang tidak diperlukan dapat dihapus." as UC6
+    usecase "Sebagai Staff, saya ingin melihat data barang agar dapat mengetahui stok barang yang tersedia." as UC7
+}
+
+A --> UC1
+A --> UC2
+A --> UC3
+A --> UC4
+A --> UC5
+A --> UC6
+
+S --> UC1
+S --> UC2
+S --> UC7
+
+@enduml
+
+
+@startuml
+class Pengguna {
+    - id: int
+    - username: string
+    - password: string
+    - peran: string <<enum>> // Admin, Staff
+    + login(): bool
+    + logout(): void
+}
+
+class Barang {
+    - id: int
+    - kode_barang: string
+    - nama_barang: string
+    - jumlah: int
+    - harga: float
+    + tambahBarang(): void
+    + lihatDetailBarang(): string
+    + perbaruiBarang(): void
+    + hapusBarang(): void
+}
+
+Pengguna "1" --> "0..*" Barang
+@enduml
+
+
+@startuml
+actor Pengguna as P
+actor Admin as A
+actor Staff as S
+participant "Sistem" as System
+participant "Database" as DB
+participant "Laporan" as Report
+
+== Fitur Login ==
+P -> System : login(username, password)
+System -> DB : cek kredensial(username, password)
+DB --> System : validasi berhasil/ gagal
+System -> P : tampilkan dashboard (berhasil/gagal)
+
+== Fitur Menambah Barang (Admin) ==
+A -> System : tambahBarang(nama, kategori, jumlah, harga)
+System -> DB : simpanBarang(nama, kategori, jumlah, harga)
+DB --> System : konfirmasi penyimpanan
+System -> A : tampilkan pesan sukses
+
+== Fitur Melihat Barang (Admin/Staff) ==
+P -> System : lihatBarang()
+System -> DB : ambilDataBarang()
+DB --> System : kirim data barang
+System -> P : tampilkan daftar barang
+
+== Fitur Memperbarui Barang (Admin) ==
+A -> System : perbaruiBarang(idBarang, nama, kategori, jumlah, harga)
+System -> DB : updateBarang(idBarang, nama, kategori, jumlah, harga)
+DB --> System : konfirmasi pembaruan
+System -> A : tampilkan pesan sukses
+
+== Fitur Menghapus Barang (Admin) ==
+A -> System : hapusBarang(idBarang)
+System -> DB : deleteBarang(idBarang)
+DB --> System : konfirmasi penghapusan
+System -> A : tampilkan pesan sukses
+
+== Fitur Logout ==
+P -> System : logout()
+System -> P : tampilkan pesan keluar
+@enduml
+
+
+@startuml
+start
+
+:Masukkan Username dan Password;
+:Validasi Login;
+if (Login Berhasil?) then (ya)
+  :Tampilkan Dashboard;
+  :Pilih Fitur;
+  if (Tambah Barang?) then (ya)
+    :Masukkan Data Barang;
+    :Simpan Barang ke Database;
+    :Konfirmasi Penyimpanan;
+  elseif (Lihat Barang?) then (ya)
+    :Ambil Data Barang dari Database;
+    :Tampilkan Daftar Barang;
+  elseif (Perbarui Barang?) then (ya)
+    :Pilih Barang untuk Diperbarui;
+    :Perbarui Data Barang;
+    :Update Barang di Database;
+    :Konfirmasi Pembaruan;
+  elseif (Hapus Barang?) then (ya)
+    :Pilih Barang untuk Dihapus;
+    :Hapus Barang dari Database;
+    :Konfirmasi Penghapusan;
+  end
+  :Pilih Logout;
+  :Keluar dari Sistem;
+else (gagal)
+  :Tampilkan Pesan Error;
+endif
+
+stop
+@enduml
